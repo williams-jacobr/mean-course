@@ -22,41 +22,46 @@ router.post("/signup", (req, res, next) => {
         });
       })
       .catch((err) => {
-        res.status(500).json({
-          error: err,
-        });
+        res
+          .status(500)
+          .json({ message: "Invalid authentication credentials!" });
       });
   });
 });
 
 router.post("/login", (req, res, next) => {
+  let fetchedUser;
   User.findOne({ email: req.body.email })
     .then((user) => {
       if (!user) {
-        return res.status(401).json({ message: "Auth failed" });
+        return res
+          .status(401)
+          .json({ message: "Invalid authentication credentials!" });
       }
-      return {
-        user: user,
-        compare: bcrypt.compare(req.body.password, user.password),
-      };
+      fetchedUser = user;
+      return bcrypt.compare(req.body.password, user.password);
     })
     .then((result) => {
-      if (!result.compare) {
-        return res.status(401).json({ message: "Auth failed" });
+      if (!result) {
+        return res
+          .status(401)
+          .json({ message: "Invalid authentication credentials!" });
       }
       const token = jwt.sign(
-        { email: result.user.email, userId: result.user._id },
+        { email: fetchedUser.email, userId: fetchedUser._id },
         "secret_this_should_be_longer",
         { expiresIn: "1h" }
       );
       res.status(200).json({
         token: token,
         expiresIn: 3600,
-        userId: result.user._id,
+        userId: fetchedUser._id,
       });
     })
     .catch((err) => {
-      return res.status(401).json({ message: "Auth failed" });
+      return res
+        .status(401)
+        .json({ message: "Invalid authentication credentials!" });
     });
 });
 

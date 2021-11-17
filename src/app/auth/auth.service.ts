@@ -34,13 +34,14 @@ export class AuthService {
 
   createUser(email: string, password: string) {
     const authData: AuthData = { email: email, password: password };
-    this.http
-      .post('http://localhost:3000/api/user/signup', authData)
-      .subscribe((response) => {
-        console.log(response);
-      });
-
-    this.router.navigate(['/']);
+    this.http.post('http://localhost:3000/api/user/signup', authData).subscribe(
+      (response) => {
+        this.router.navigate(['/']);
+      },
+      (error) => {
+        this.authStatusListener.next(false);
+      }
+    );
   }
 
   autoAuthUser() {
@@ -66,25 +67,30 @@ export class AuthService {
         'http://localhost:3000/api/user/login',
         authData
       )
-      .subscribe((response) => {
-        this.token = response.token;
-        if (!this.token) return;
+      .subscribe(
+        (response) => {
+          this.token = response.token;
+          if (!this.token) return;
 
-        const expiresInDuration = response.expiresIn;
-        this.setAuthTimer(expiresInDuration);
+          const expiresInDuration = response.expiresIn;
+          this.setAuthTimer(expiresInDuration);
 
-        this.isAuthenticated = true;
-        this.authStatusListener.next(true);
-        this.userId = response.userId;
+          this.isAuthenticated = true;
+          this.authStatusListener.next(true);
+          this.userId = response.userId;
 
-        const now = new Date();
-        const expirationDate = new Date(
-          now.getTime() + expiresInDuration * 1000
-        );
-        this.saveAuthData(this.token, expirationDate, this.userId);
+          const now = new Date();
+          const expirationDate = new Date(
+            now.getTime() + expiresInDuration * 1000
+          );
+          this.saveAuthData(this.token, expirationDate, this.userId);
 
-        this.router.navigate(['/']);
-      });
+          this.router.navigate(['/']);
+        },
+        (error) => {
+          this.authStatusListener.next(false);
+        }
+      );
   }
 
   logout() {
