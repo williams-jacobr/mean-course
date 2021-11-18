@@ -6,7 +6,7 @@ const mongoose = require("mongoose");
 const postsRoutes = require("./routes/posts");
 const userRoutes = require("./routes/user");
 
-const password = "b1ZQ7KrwYKTYbWk1";
+const password = process.env.MONGO_ATLAS_PW;
 
 const app = express();
 
